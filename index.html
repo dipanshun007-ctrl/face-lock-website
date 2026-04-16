@@ -44,7 +44,7 @@
 
             try {
                 // Send the image to our Flask API
-                const response = await fetch('https://huggingface.co/spaces/Dipanshun/face-login-api', {
+                const response = await fetch('Dipanshun/face-login-api', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: imageData })
