@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Face Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        video { border: 2px solid #ccc; border-radius: 8px; }
+        button { padding: 10px 20px; font-size: 16px; margin-top: 20px; cursor: pointer; }
+        #message { margin-top: 20px; font-weight: bold; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+    <h2>Secure Face Login</h2>
+    
+    <video id="webcam" width="400" height="300" autoplay></video>
+    <br>
+    <button onclick="attemptLogin()">Log In with Face</button>
+
+    <canvas id="canvas" width="400" height="300" style="display:none;"></canvas>
+    
+    <div id="message"></div>
+
+    <script>
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('canvas');
+        const messageDiv = document.getElementById('message');
+
+        // 1. Turn on the user's webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => { video.srcObject = stream; })
+            .catch(err => { console.error("Webcam access denied", err); });
+
+        // 2. Function to take photo and send to Python backend
+        async function attemptLogin() {
+            messageDiv.innerText = "Analyzing face...";
+            
+            // Draw the current video frame onto the canvas
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert the canvas image to a Base64 string
+            const imageData = canvas.toDataURL('image/jpeg');
+
+            try {
+                // Send the image to our Flask API
+                const response = await fetch('http://127.0.0.1:5000/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: imageData })
+                });
+
+                const result = await response.json();
+                
+                // Display the result from Python
+                if (result.status === 'success') {
+                    messageDiv.style.color = "green";
+                    messageDiv.innerText = result.message;
+                } else {
+                    messageDiv.style.color = "red";
+                    messageDiv.innerText = result.message;
+                }
+                
+            } catch (error) {
+                messageDiv.innerText = "Error connecting to server.";
+            }
+        }
+    </script>
+</body>
+</html>
